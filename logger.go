@@ -147,16 +147,14 @@ func (l *Logger) doLog(n int, color string, format string, a ...interface{}) {
 
 func (l *Logger) coalesce(header string, a ...interface{}) []interface{} {
 	d := l.getDate()
-	var ret []interface{}
 	if l.timestamp && l.preNote {
-		ret = []interface{}{header, d}
+		return append([]interface{}{header, d}, a...)
 	} else if l.timestamp {
-		ret = []interface{}{d}
+		return append([]interface{}{d}, a...)
 	} else if l.preNote {
-		ret = []interface{}{header}
+		return append([]interface{}{header}, a...)
 	}
-	ret = append(ret, a...)
-	return ret
+	return nil
 }
 
 func (l *Logger) getPreMsg(color string, colorize bool) string {
