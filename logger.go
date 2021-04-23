@@ -8,22 +8,6 @@ import (
 	"time"
 )
 
-// SetModes sets the verbose and debug variables according to given parameters
-func (l *Logger) SetMode(mode string) {
-	if mode == "verbose" {
-		l.mode = Verbose
-	} else if mode == "debug" {
-		l.mode = Debug
-	} else {
-		fmt.Println("logger mode set not valid")
-	}
-}
-
-// ToggleSilent enables/disables silent mode. No logs will be shown if enabled. Note that this does not prevent file logging.
-func (l *Logger) ToggleSilent() {
-	l.silent = !l.silent
-}
-
 // ToggleTimestamp enables/disables timestamp on log
 func (l *Logger) ToggleTimestamp() {
 	l.timestamp = !l.timestamp
@@ -37,11 +21,6 @@ func (l *Logger) ToggleColor() {
 // TogglePreNote enables/disables timestamp on log
 func (l *Logger) TogglePreNote() {
 	l.preNote = !l.preNote
-}
-
-// TogglePreNote enables/disables timestamp on log
-func (l *Logger) ToggleDualMode() {
-	l.dualMode = !l.dualMode
 }
 
 func (l *Logger) logFormat(format string) string {
@@ -73,6 +52,9 @@ func (l *Logger) writeLog(n int, color string, format string, a ...interface{}) 
 	format = l.logFormat(format)
 	a = l.coalesce(l.getPreMsg(color, false), a...)
 
+	if l.outputFile == "" {
+		l.outputFile = "./default.log"
+	}
 	f, err := os.OpenFile(l.outputFile,
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -87,61 +69,20 @@ func (l *Logger) writeLog(n int, color string, format string, a ...interface{}) 
 
 func (l *Logger) doLog(n int, color string, format string, a ...interface{}) {
 	switch {
-	case uint8(n) > l.mode:
-		return
-
-	case !l.write && l.silent:
-		return
-
-	case l.write && l.silent:
-		write := false
-		switch n {
-		case Regular:
-			if l.writeScope.Regular {
-				write = true
-			}
-		case Verbose:
-			if l.writeScope.Verbose {
-				write = true
-			}
-		case Debug:
-			if l.writeScope.Debug {
-				write = true
-			}
-		}
-		if write {
-			l.writeLog(n, color, format, a...)
-		}
-
-	case !l.write && !l.silent:
+	case l.scope.Regular && n == 1:
 		l.printLog(color, format, a...)
-
-	default:
-
-		write := false
-		switch n {
-		case Regular:
-			if l.writeScope.Regular {
-				write = true
-			}
-		case Verbose:
-			if l.writeScope.Verbose {
-				write = true
-			}
-		case Debug:
-			if l.writeScope.Debug {
-				write = true
-			}
-		}
-
-		if write {
-			l.writeLog(n, color, format, a...)
-			if l.dualMode {
-				l.printLog(color, format, a...)
-			}
-			return
-		}
+	case l.scope.Verbose && n == 2:
 		l.printLog(color, format, a...)
+	case l.scope.Debug && n == 3:
+		l.printLog(color, format, a...)
+	}
+	switch {
+	case l.scope.RegularWrite && n == 1:
+		l.writeLog(n, color, format, a...)
+	case l.scope.VerboseWrite && n == 2:
+		l.writeLog(n, color, format, a...)
+	case l.scope.DebugWrite && n == 3:
+		l.writeLog(n, color, format, a...)
 	}
 }
 
@@ -202,19 +143,19 @@ func (l *Logger) OutputFile(filename string) {
 	l.outputFile = filename
 }
 
-// StopLogToFile turns off the OutputToFile option and resets these preferences
-func (l *Logger) StopWriter() {
-	l.write = false
+func (l *Logger) SetScope(r, rw, v, vw, d, dw bool) {
+	l.scope = Scope{r, rw, v, vw, d, dw}
 }
 
-func (l *Logger) StartWriter() {
-	if l.outputFile == "" {
-		fmt.Println("Writter cannot start without output file")
-		return
-	}
-	l.write = true
+func (l *Logger) SetRegularScope(r, w bool) {
+	l.scope.Regular = r
+	l.scope.RegularWrite = w
 }
-
-func (l *Logger) SetScope(r, v, d bool) {
-	l.writeScope = Scope{r, v, d}
+func (l *Logger) SetVerboseScope(r, w bool) {
+	l.scope.Verbose = r
+	l.scope.VerboseWrite = w
+}
+func (l *Logger) SetDebugScope(r, w bool) {
+	l.scope.Debug = r
+	l.scope.DebugWrite = w
 }

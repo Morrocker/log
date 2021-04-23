@@ -1,7 +1,5 @@
 package log
 
-import "fmt"
-
 var oneLogger *Logger
 
 func init() {
@@ -193,16 +191,6 @@ func OutputFile(filename string) {
 	oneLogger.OutputFile(filename)
 }
 
-// SetModes sets the verbose and debug variables according to given parameters
-func SetMode(mode string) {
-	oneLogger.SetMode(mode)
-}
-
-// ToggleSilent enables/disables silent mode. No logs will be shown if enabled. Note that this does not prevent file logging.
-func ToggleSilent() {
-	oneLogger.ToggleSilent()
-}
-
 // ToggleTimestamp enables/disables timestamp on log
 func ToggleTimestamp() {
 	oneLogger.ToggleTimestamp()
@@ -218,24 +206,18 @@ func TogglePreNote() {
 	oneLogger.TogglePreNote()
 }
 
-// TogglePreNote enables/disables timestamp on log
-func ToggleDualMode() {
-	oneLogger.ToggleDualMode()
+func SetScope(r, rw, v, vw, d, dw bool) {
+	oneLogger.SetScope(r, rw, v, vw, d, dw)
 }
 
-// StopLogToFile turns off the OutputToFile option and resets these preferences
-func StopWriter() {
-	oneLogger.StopWriter()
+func SetRegularScope(r, w bool) {
+	oneLogger.SetRegularScope(r, w)
 }
 
-func StartWriter() {
-	if oneLogger.outputFile == "" {
-		fmt.Println("Writter cannot start without output file")
-		return
-	}
-	oneLogger.StartWriter()
+func SetVerboseScope(r, w bool) {
+	oneLogger.SetVerboseScope(r, w)
 }
 
-func SetScope(r, v, d bool) {
-	oneLogger.SetScope(r, v, d)
+func SetDebugScope(r, w bool) {
+	oneLogger.SetDebugScope(r, w)
 }

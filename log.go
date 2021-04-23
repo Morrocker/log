@@ -13,14 +13,11 @@ const (
 )
 
 type Logger struct {
-	write      bool
-	silent     bool
 	timestamp  bool
 	preNote    bool
-	dualMode   bool
 	color      bool
 	mode       uint8
-	writeScope Scope
+	scope      Scope
 	timeFormat string
 	outputFile string
 	writeLock  sync.Mutex
@@ -32,9 +29,12 @@ type preMessages struct {
 }
 
 type Scope struct {
-	Regular bool
-	Verbose bool
-	Debug   bool
+	Regular      bool
+	RegularWrite bool
+	Verbose      bool
+	VerboseWrite bool
+	Debug        bool
+	DebugWrite   bool
 }
 
 func New() *Logger {
@@ -52,7 +52,7 @@ func New() *Logger {
 			blue:    "[NOTE]",
 			magenta: "[BENCH]",
 		},
-		writeScope: Scope{true, true, true},
+		scope: Scope{Regular: true, Verbose: true, Debug: true},
 	}
 	return newLogger
 }
