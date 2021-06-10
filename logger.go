@@ -2,28 +2,27 @@ package log
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"time"
 )
 
 // ToggleTimestamp enables/disables timestamp on log
-func (l *Logger) ToggleTimestamp() {
+func (l *logger) ToggleTimestamp() {
 	l.timestamp = !l.timestamp
 }
 
 // ToggleTimestamp enables/disables timestamp on log
-func (l *Logger) ToggleColor() {
+func (l *logger) ToggleColor() {
 	l.color = !l.color
 }
 
 // TogglePreNote enables/disables timestamp on log
-func (l *Logger) TogglePreNote() {
+func (l *logger) TogglePreNote() {
 	l.preNote = !l.preNote
 }
 
-func (l *Logger) logFormat(format string) string {
+func (l *logger) logFormat(format string) string {
 	var ret string
 	if l.timestamp && l.preNote {
 		ret = "%s\t%s: "
@@ -32,11 +31,11 @@ func (l *Logger) logFormat(format string) string {
 	} else if l.preNote {
 		ret = "%s\t"
 	}
-	return ret + format
+	return fmt.Sprintf("%s%s", ret, format)
 }
 
-func (l *Logger) printLog(color, format string, a ...interface{}) {
-	var writter io.Writer = os.Stdout
+func (l *logger) printLog(color, format string, a ...interface{}) {
+	writter := os.Stdout
 	format = l.logFormat(format)
 	a = l.coalesce(l.getPreMsg(color, l.color), a...)
 	if color == "red" {
@@ -46,7 +45,7 @@ func (l *Logger) printLog(color, format string, a ...interface{}) {
 	fmt.Fprintf(writter, format, a...)
 }
 
-func (l *Logger) writeLog(n int, color string, format string, a ...interface{}) {
+func (l *logger) writeLog(n int, color string, format string, a ...interface{}) {
 	l.writeLock.Lock()
 	defer l.writeLock.Unlock()
 	format = l.logFormat(format)
@@ -55,8 +54,7 @@ func (l *Logger) writeLog(n int, color string, format string, a ...interface{}) 
 	if l.outputFile == "" {
 		l.outputFile = "./default.log"
 	}
-	f, err := os.OpenFile(l.outputFile,
-		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(l.outputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println(err)
 	}
@@ -67,7 +65,7 @@ func (l *Logger) writeLog(n int, color string, format string, a ...interface{}) 
 	}
 }
 
-func (l *Logger) doLog(n int, color string, format string, a ...interface{}) {
+func (l *logger) doLog(n int, color string, format string, a ...interface{}) {
 	switch {
 	case l.scope.Regular && n == 1:
 		l.printLog(color, format, a...)
@@ -86,7 +84,7 @@ func (l *Logger) doLog(n int, color string, format string, a ...interface{}) {
 	}
 }
 
-func (l *Logger) coalesce(header string, a ...interface{}) []interface{} {
+func (l *logger) coalesce(header string, a ...interface{}) []interface{} {
 	d := l.getDate()
 	if l.timestamp && l.preNote {
 		return append([]interface{}{header, d}, a...)
@@ -98,7 +96,7 @@ func (l *Logger) coalesce(header string, a ...interface{}) []interface{} {
 	return nil
 }
 
-func (l *Logger) getPreMsg(color string, colorize bool) string {
+func (l *logger) getPreMsg(color string, colorize bool) string {
 	var msg string
 	if colorize {
 		switch color {
@@ -134,28 +132,28 @@ func (l *Logger) getPreMsg(color string, colorize bool) string {
 	return msg
 }
 
-func (l *Logger) getDate() string {
+func (l *logger) getDate() string {
 	return time.Now().Format(l.timeFormat)
 }
 
 // OutputToFile sets the log to be printed to a file instead of StdOut. What gets written can be tuned.
-func (l *Logger) OutputFile(filename string) {
+func (l *logger) OutputFile(filename string) {
 	l.outputFile = filename
 }
 
-func (l *Logger) SetScope(r, rw, v, vw, d, dw bool) {
+func (l *logger) SetScope(r, rw, v, vw, d, dw bool) {
 	l.scope = Scope{r, rw, v, vw, d, dw}
 }
 
-func (l *Logger) SetRegularScope(r, w bool) {
+func (l *logger) SetRegularScope(r, w bool) {
 	l.scope.Regular = r
 	l.scope.RegularWrite = w
 }
-func (l *Logger) SetVerboseScope(r, w bool) {
+func (l *logger) SetVerboseScope(r, w bool) {
 	l.scope.Verbose = r
 	l.scope.VerboseWrite = w
 }
-func (l *Logger) SetDebugScope(r, w bool) {
+func (l *logger) SetDebugScope(r, w bool) {
 	l.scope.Debug = r
 	l.scope.DebugWrite = w
 }
