@@ -90,6 +90,7 @@ type Scope struct {
 	DebugWrite   bool
 }
 
+// New returns an initialized Logger interface
 func New() Logger {
 	newLogger := &logger{
 		timestamp:  true,
